@@ -1,0 +1,13 @@
+﻿{
+  "name": "tfg/garage-manager-backend",
+  "description": "Backend API base para TFG Garage Mantenimiento",
+  "type": "project",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
