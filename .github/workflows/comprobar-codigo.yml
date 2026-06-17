@@ -1,0 +1,59 @@
+name: Comprobación de Código con Gemini
+
+on:
+  push:
+    branches: [ main ]  # Se ejecuta cuando subes cambios a la rama principal
+
+jobs:
+  analizar-repositorio:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descarga el código del repositorio en la máquina virtual de GitHub
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # 2. Configura un entorno de Python
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Instala la librería oficial de Google GenAI
+      - name: Instalar dependencias
+        run: |
+          pip install google-genai
+
+      # 4. Script que toma un archivo y le pide a Gemini que lo compruebe
+      - name: Ejecutar análisis con Gemini
+        env:
+          # Aquí es donde GitHub Actions lee de forma segura tu API Key
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python - <<EOF
+          import os
+          from google import genai
+
+          # Inicializa el cliente usando la variable de entorno que inyectó GitHub
+          client = genai.Client()
+
+          # Supongamos que quieres comprobar un archivo específico, por ejemplo, 'script.py'
+          # Asegúrate de que el archivo que pongas aquí exista en tu repositorio
+          archivo_a_comprobar = "script.py" 
+
+          if os.path.exists(archivo_a_comprobar):
+              with open(archivo_a_comprobar, "r", encoding="utf-8") as f:
+                  contenido_codigo = f.read()
+              
+              prompt = f"Actúa como un revisor de código experto. Analiza el siguiente código, encuentra posibles errores, problemas de rendimiento o vulnerabilidades de seguridad, y sugiere mejoras optimizadas:\n\n{contenido_codigo}"
+              
+              print(f"--- Iniciando análisis de {archivo_a_comprobar} con Gemini 1.5 Flash ---")
+              response = client.models.generate_content(
+                  model='gemini-1.5-flash',
+                  contents=prompt,
+              )
+              print("\n### RESULTADO DEL ANÁLISIS DE GEMINI ###\n")
+              print(response.text)
+          else:
+              print(f"El archivo {archivo_a_comprobar} no se encontró en el repositorio para ser analizado.")
+          EOF
